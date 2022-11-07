@@ -5,6 +5,7 @@ extends Node2D
 # ----------------------------------------
 const Point2 = preload("res://Point2.gd")
 const Array2 = preload("res://Array2.gd")
+const TileObj = preload("res://Tile.tscn")
 
 # ----------------------------------------
 # 定数.
@@ -20,6 +21,8 @@ var _font:BitmapFont
 var _cursor = Point2.new()
 var _select = Point2.new()
 
+var _tiles = []
+
 # ----------------------------------------
 # メンバ関数.
 # ----------------------------------------
@@ -27,9 +30,17 @@ func _ready() -> void:
 	_font = Control.new().get_font("font")
 	# 選択位置をリセットする.
 	_select.reset()
+	
+func _create_tile(id:int, x:int, y:int) -> TileObj:
+	var tile = TileObj.instance()
+	add_child(tile)
+	tile.appear(id, x, y)
+	return tile
 
+# 更新.
 func _process(_delta: float) -> void:
 	
+	# カーソルの移動.
 	if Input.is_action_just_pressed("ui_left"):
 		_cursor.x -= 1
 	if Input.is_action_just_pressed("ui_right"):
@@ -45,7 +56,7 @@ func _process(_delta: float) -> void:
 		# ランダムにブロックを配置する
 		_set_random()
 		# 落下させる
-		_fall()
+		#_fall()
 		
 	if Input.is_action_just_pressed("ui_z"):
 		if _cursor.equal(_select) == false:
@@ -67,9 +78,21 @@ func _process(_delta: float) -> void:
 	update()
 
 func _set_random() -> void:
+	for tile in _tiles:
+		tile.queue_free()
+	_tiles = []
+	
 	for idx in range(_field.width * _field.height):
 		var v = randi()%7
 		_field.set_idx(idx, v)
+		if v == Array2.EMPTY:
+			pass
+			#continue
+		var px = _field.to_x(idx)
+		var py = _field.to_y(idx)
+		var tile = _create_tile(v, px, py)
+		_tiles.append(tile)
+		#add_child(tile)
 
 # 落下.
 func _fall() -> void:
@@ -146,19 +169,22 @@ func _check_erase_around(tmp:Array2, n:int, cnt:int, x:int, y:int, vx:int, vy:in
 
 func _draw() -> void:
 	
-	_draw_cursor(_cursor.x, _cursor.y, Color.red)
+	_draw_cursor(_cursor.x, _cursor.y, Color.red, 512, 380)
 	if _select.is_valid():
-		_draw_cursor(_select.x, _select.y, Color.yellow)
+		_draw_cursor(_select.x, _select.y, Color.yellow, 512, 380)
 	
 	for j in range(_field.height):
-		var buf = ""
 		for i in range(_field.width):
-			buf += "%2d  "%_field.getv(i, j)
-		draw_string(_font, Vector2(32, 32 + 20 * j), buf)
+			var n = _field.getv(i, j)
+			_draw_tile(n, i, j, 512, 380)
 
-func _draw_cursor(x:int, y:int, color:Color) -> void:
+func _draw_tile(n:int, x:int, y:int, x_ofs:float, y_ofs:float) -> void:
+	var buf = "%d"%n
+	draw_string(_font, Vector2(x_ofs + 32 + 20 * x, y_ofs + 32 + 20 * y), buf)	
+
+func _draw_cursor(x:int, y:int, color:Color, x_ofs:float, y_ofs:float) -> void:
 	var rect = Rect2(
-		Vector2(32 + 20 * x, 16 + 20 * y),
+		Vector2(x_ofs + 26 + 20 * x, y_ofs + 16 + 20 * y),
 		Vector2(20, 20)
 	)
 	draw_rect(rect, color, false)
