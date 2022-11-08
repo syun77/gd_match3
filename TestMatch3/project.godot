@@ -24,6 +24,10 @@ config/name="TestMatch3"
 run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
 
+[autoload]
+
+FieldMgr="*res://FieldMgr.tscn"
+
 [debug]
 
 gdscript/warnings/integer_division=false
