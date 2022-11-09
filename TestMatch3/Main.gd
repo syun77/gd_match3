@@ -91,11 +91,14 @@ func _draw() -> void:
 	for j in range(FieldMgr.HEIGHT):
 		for i in range(FieldMgr.WIDTH):
 			var n = FieldMgr.getv(i, j)
-			_draw_tile(n, i, j, 512, 380)
+			var color = Color.white
+			if n == Array2.EMPTY:
+				color = Color.gray
+			_draw_tile(n, i, j, 512, 380, color)
 
-func _draw_tile(n:int, x:int, y:int, x_ofs:float, y_ofs:float) -> void:
+func _draw_tile(n:int, x:int, y:int, x_ofs:float, y_ofs:float, color:Color) -> void:
 	var buf = "%d"%n
-	draw_string(_font, Vector2(x_ofs + 32 + 20 * x, y_ofs + 32 + 20 * y), buf)	
+	draw_string(_font, Vector2(x_ofs + 32 + 20 * x, y_ofs + 32 + 20 * y), buf, color)	
 
 func _draw_cursor(x:int, y:int, color:Color, x_ofs:float, y_ofs:float) -> void:
 	var rect = Rect2(

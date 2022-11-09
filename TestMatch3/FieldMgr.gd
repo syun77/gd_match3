@@ -25,11 +25,28 @@ onready var _layer = $Layer
 
 # ----------------------------------------
 # メンバ関数.
-# ----------------------------------------	
+# ----------------------------------------
+func _process(_delta: float) -> void:
+	
+	# いったん初期化.
+	_field.fill(Array2.EMPTY)
+	
+	# フィールド情報を更新.
+	for tile in _tiles:
+		if tile.is_standby() == false:
+			continue
+		var px = tile.get_now_x()
+		var py = tile.get_now_y()
+		var num = tile.get_id()
+		_field.setv(int(px), int(py), num)
+
 func getv(i:int, j:int) -> int:
 	return _field.getv(i, j)
 	
 func check_hit_bottom(tile:TileObj) -> bool:
+	if tile.get_now_y() >= HEIGHT - 1:
+		return true
+	
 	for t in _tiles:
 		if tile.check_hit_bottom(t):
 			return true
@@ -51,8 +68,7 @@ func set_random() -> void:
 		var v = randi()%7
 		_field.set_idx(idx, v)
 		if v == Array2.EMPTY:
-			pass
-			#continue
+			continue
 		var px = _field.to_x(idx)
 		var py = _field.to_y(idx)
 		_create_tile(v, px, py)

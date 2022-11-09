@@ -6,7 +6,7 @@ const Array2 = preload("res://Array2.gd")
 const TILE_SIZE = 32
 
 # 重力加速度.
-const GRAVITY_Y = 0.1
+const GRAVITY_Y = 0.001
 
 # 消滅時間.
 const TIMER_VANISH = 1.0
@@ -56,6 +56,11 @@ func set_id(var id):
 func get_id() -> int:
 	return _id
 
+func get_now_x() -> float:
+	return _now_x
+func get_now_y() -> float:
+	return _now_y
+
 func appear(id:int, px:float, py:float) -> void:
 	# IDを設定.
 	set_id(id)
@@ -68,18 +73,34 @@ func appear(id:int, px:float, py:float) -> void:
 
 # 落下チェック.
 func _check_fall() -> bool:
-	if FieldMgr.check_hit_bottom(self) == false:
+	if FieldMgr.check_hit_bottom(self):
 		return false
-	return true	
+	return true
 
+# 下のタイルと衝突しているかどうか
+# @param tile 判定する下のタイル 
 func check_hit_bottom(tile:TileObj) -> bool:
-	if _now_x != tile._now_x:
-		return false
 	
-	var bottom = _now_x + TILE_SIZE/2.0
-	var upper = tile._now_x - TILE_SIZE/2.0
-	if bottom <= upper:
-		return false
+	var obj_id = tile.get_instance_id()
+	var number = tile.get_id()
+	var tile_x = tile.get_now_x()
+	var tile_y = tile.get_now_y()
+	
+	# ユニークIDを比較.
+	if get_instance_id() == obj_id:
+		return false # 自分自身は除外.
+	
+	if _now_x != tile_x:
+		return false # 別のX座標のブロック
+	
+	if _now_y > tile_y:
+		return false # 対象のタイルがそもそも上にあるので判定不要.
+		
+	var bottom = _now_y + 0.5 # 上のブロックの底
+	var upper = tile_y - 0.5 # 下のブロックのトップ
+	if bottom < upper:
+		return false # 重なっていない.
+		
 	return true
 
 func to_world(x:float, y:float) -> Vector2:
@@ -89,11 +110,13 @@ func to_world(x:float, y:float) -> Vector2:
 	return Vector2(px, py)
 
 func fit_grid() -> void:
-	_now_x = int(_now_x / TILE_SIZE) * TILE_SIZE
-	_now_y = int(_now_y / TILE_SIZE) * TILE_SIZE
+	_now_x = int(_now_x)
+	_now_y = int(_now_y)
 
 func is_hide() -> bool:
 	return _state == eState.HIDE
+func is_standby() -> bool:
+	return _state == eState.STANDBY
 
 func start_vanish() -> void:
 	_state = eState.VANISH
@@ -117,15 +140,17 @@ func _process(delta: float) -> void:
 		eState.HIDE: # 非表示.
 			visible = false
 		eState.FALLING: # 落下中.
-
+			_label.text = "F"
 			_velocity_y += GRAVITY_Y	
 			_now_y += _velocity_y
-			if FieldMgr.check_hit_bottom(self):
+			if _check_fall() == false:
 				# 移動完了.
 				fit_grid()
+				_velocity_y = 0
 				_state = eState.STANDBY
 		eState.STANDBY:
-			pass
+			if _check_fall():
+				_state = eState.FALLING
 		eState.VANISH:
 			_timer -= delta
 			visible = true
@@ -133,3 +158,5 @@ func _process(delta: float) -> void:
 				visible = false
 			if _timer < 0:
 				_state = eState.HIDE
+	
+	#_label.text += " X:%3.2f Y:%3.2f"%[_now_x, _now_y]
