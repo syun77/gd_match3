@@ -101,7 +101,7 @@ func set_random() -> void:
 	_tiles = []
 	
 	for idx in range(_field.width * _field.height):
-		var v = randi()%7
+		var v = randi()%4
 		_field.set_idx(idx, v)
 		if v == Array2.EMPTY:
 			continue
@@ -132,10 +132,9 @@ func check_erase() -> PoolIntArray:
 				# 空なので判定不要.
 				continue
 			
-			tmp.fill(0)
-			tmp.setv(i, j, 2) # 消せるかもしれない候補.
-			
 			for k in range(2):
+				tmp.fill(0)
+				tmp.setv(i, j, 2) # 消せるかもしれない候補.
 				var cnt = 1
 				
 				# 上下を調べる.
