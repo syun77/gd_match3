@@ -18,8 +18,8 @@ const OFS_Y = 32
 # ----------------------------------------
 # メンバ変数.
 # ----------------------------------------
-var _field = Array2.new(WIDTH, HEIGHT)
-var _tiles = []
+var _field  = Array2.new(WIDTH, HEIGHT)
+var _tiles  = []
 
 onready var _layer = $Layer
 
@@ -27,6 +27,14 @@ onready var _layer = $Layer
 # メンバ関数.
 # ----------------------------------------
 func _process(_delta: float) -> void:
+	
+	# 消滅したタイルを消しておく.
+	var tmp = []
+	for tile in _tiles:
+		if is_instance_valid(tile):
+			# 有効なタイルのみ追加
+			tmp.append(tile)
+	_tiles = tmp
 	
 	# いったん初期化.
 	_field.fill(Array2.EMPTY)
@@ -39,7 +47,22 @@ func _process(_delta: float) -> void:
 		var py = tile.get_now_y()
 		var num = tile.get_id()
 		_field.setv(int(px), int(py), num)
+	
+	# 消去リストを取得する.
+	var erase_list = check_erase()
+	
+	# 消去実行.
+	for idx in erase_list:
+		var x = _field.to_x(idx)
+		var y = _field.to_y(idx)
+		var n = _field.getv(x, y)
+		print("erase[%d]: (x, y) = (%d, %d)"%[n, x, y])
+		_field.set_idx(idx, Array2.EMPTY)
 
+		# 消滅開始.		
+		var tile = search_tile(x, y)
+		tile.start_vanish()
+		
 func getv(i:int, j:int) -> int:
 	return _field.getv(i, j)
 	
@@ -52,6 +75,19 @@ func check_hit_bottom(tile:TileObj) -> bool:
 			return true
 	
 	return false
+
+# 指定の位置にあるタイルを探す.
+func search_tile(i:int, j:int) -> TileObj:
+	for tile in _tiles:
+		if tile.is_standby() == false:
+			continue
+		
+		if tile.is_same_pos(i, j) == true:
+			# 座標が一致.
+			return tile
+	
+	# 見つからなかった.
+	return null
 
 func _create_tile(id:int, x:int, y:int) -> void:
 	var tile = TileObj.instance()
@@ -72,6 +108,9 @@ func set_random() -> void:
 		var px = _field.to_x(idx)
 		var py = _field.to_y(idx)
 		_create_tile(v, px, py)
+	
+	# いったん消しておきます.
+	_field.fill(Array2.EMPTY)
 
 func swap(x1:int, y1:int, x2:int, y2:int) -> void:
 	_field.swap(x1, y1, x2, y2)
@@ -79,7 +118,7 @@ func swap(x1:int, y1:int, x2:int, y2:int) -> void:
 func fall() -> void:
 	_field.fall()
 
-func check_erase() -> void:
+func check_erase() -> PoolIntArray:
 	var erase_list = PoolIntArray()
 	
 	# 1: 検索済み.
@@ -119,13 +158,8 @@ func check_erase() -> void:
 		if list.has(idx) == false:
 			list.append(idx)
 	
-	# 消去実行.
-	for idx in list:
-		var x = _field.to_x(idx)
-		var y = _field.to_y(idx)
-		var n = _field.getv(x, y)
-		print("erase[%d]: (x, y) = (%d, %d)"%[n, x, y])
-		_field.set_idx(idx, Array2.EMPTY)
+	return list
+
 
 func _check_erase_around(tmp:Array2, n:int, cnt:int, x:int, y:int, vx:int, vy:int) -> int:
 	# 移動先を調べる.

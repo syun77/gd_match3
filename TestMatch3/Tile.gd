@@ -9,7 +9,7 @@ const TILE_SIZE = 32
 const GRAVITY_Y = 0.001
 
 # 消滅時間.
-const TIMER_VANISH = 1.0
+const TIMER_VANISH = 0.5
 
 enum eTile {
 	NONE = 0 # 無効なタイルID
@@ -118,6 +118,11 @@ func is_hide() -> bool:
 func is_standby() -> bool:
 	return _state == eState.STANDBY
 
+func is_same_pos(i:int, j:int) -> bool:
+	if i == int(_now_x) and j == int(_now_y):
+		return true	
+	return false
+	
 func start_vanish() -> void:
 	_state = eState.VANISH
 	_timer = TIMER_VANISH
@@ -154,9 +159,10 @@ func _process(delta: float) -> void:
 		eState.VANISH:
 			_timer -= delta
 			visible = true
-			if fmod(_timer, 0.2) < 0.1:
+			if fmod(_timer, 0.1) < 0.05:
 				visible = false
 			if _timer < 0:
-				_state = eState.HIDE
+				# 消滅する.
+				queue_free()
 	
 	#_label.text += " X:%3.2f Y:%3.2f"%[_now_x, _now_y]
