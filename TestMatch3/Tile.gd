@@ -18,8 +18,6 @@ const Array2 = preload("res://Array2.gd")
 # ----------------------------------------
 # 定数.
 # ----------------------------------------
-const TILE_SIZE = 32
-
 # 重力加速度.
 const GRAVITY_Y = 0.005
 
@@ -96,7 +94,7 @@ func appear(id:int, px:float, py:float) -> void:
 	visible = true
 	
 	# タイル座標系をワールド座標系に変換.
-	position = to_world(_now_x, _now_y)
+	position = FieldMgr.to_world(_now_x, _now_y)
 
 # 落下チェック.
 func _check_fall() -> bool:
@@ -133,12 +131,6 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	
 	return true
 
-func to_world(x:float, y:float) -> Vector2:
-	# タイル座標系をワールド座標に変換する.
-	var px = FieldMgr.OFS_X + TILE_SIZE * x
-	var py = FieldMgr.OFS_Y + TILE_SIZE * y
-	return Vector2(px, py)
-
 func fit_grid() -> void:
 	_now_x = int(_now_x)
 	_now_y = int(_now_y)
@@ -168,7 +160,7 @@ func proc(delta: float) -> void:
 		return
 	
 	# タイル座標系をワールド座標系に変換.
-	position = to_world(_now_x, _now_y)
+	position = FieldMgr.to_world(_now_x, _now_y)
 	
 	_label.text = "%d"%_id
 	

@@ -16,11 +16,12 @@ const TileObj = preload("res://Tile.tscn")
 # ----------------------------------------
 const WIDTH  = 8 # フィールドの幅.
 const HEIGHT = 8 # フィールドの高さ.
-const OFS_X = 32 # フィールドの描画オフセット(X).
-const OFS_Y = 320 # フィールドの描画オフセット(Y).
+const OFS_X = 64 # フィールドの描画オフセット(X).
+const OFS_Y = 64 # フィールドの描画オフセット(Y).
 
 const ERASE_CNT = 3 # 3つ並んだら消去する.
 const TILE_TYPE = 4 # 4種類出現する
+const TILE_SIZE = 64 # タイル1つあたりのサイズ.
 
 # 状態.
 enum eState {
@@ -38,17 +39,23 @@ enum eEraseType {
 # ----------------------------------------
 # メンバ変数.
 # ----------------------------------------
-var _state = eState.HIDE
-var _field = Array2.new(WIDTH, HEIGHT)
+var _state  = eState.HIDE # 状態.
+var _field  = Array2.new(WIDTH, HEIGHT) # フィールド情報.
+var _select = Point2.new() # 選択カーソル.
 
 # ----------------------------------------
 # onready.
 # ----------------------------------------
 onready var _layer = $Layer # タイル管理用キャンバスレイヤー.
+onready var _spr_cursor = $LayerUI/Cursor # カーソルスプライト.
 
 # ----------------------------------------
 # メンバ関数.
 # ----------------------------------------
+# コンストラクタ
+func _init() -> void:
+	initialize()
+	
 # 初期化.
 func initialize() -> void:
 	# フィールド情報を初期化.
@@ -56,6 +63,11 @@ func initialize() -> void:
 	
 	# タイルをすべて消しておく.
 	remove_all_tiles()
+	
+	# カーソルを無効化.
+	_select.reset()
+	if is_instance_valid(_spr_cursor):
+		_spr_cursor.visible = false
 	
 	# 初期状態は非表示.
 	_state = eState.HIDE
@@ -93,6 +105,9 @@ func proc(delta: float) -> void:
 	
 	# 消去判定を行う.
 	_update_erase()
+	
+	# カーソルの更新.
+	_update_cursor()
 
 
 # 更新 > 消去処理
@@ -124,10 +139,46 @@ func _update_erase() -> void:
 		var tile = search_tile(x, y)
 		tile.start_vanish()	
 
+# 更新 > カーソル.
+func _update_cursor() -> void:
+	
+	if Input.is_action_just_pressed("ui_click"):
+		var pos = get_global_mouse_position()
+		_select = world_to_grid(pos)
+	
+	_spr_cursor.visible = false
+	if _select.is_valid():
+		_spr_cursor.visible = true
+		_spr_cursor.position = to_world(_select.x, _select.y)
+
 # タイル情報を取得する.
 func getv(i:int, j:int) -> int:
 	return _field.getv(i, j)
 
+# グリッド座標系をワールド座標系に変換する.
+func to_world(x:float, y:float) -> Vector2:
+	# タイル座標系をワールド座標に変換する.
+	var px = OFS_X + TILE_SIZE * x
+	var py = OFS_Y + TILE_SIZE * y
+	return Vector2(px, py)
+
+# ワールド座標をグリッド座標系に変換する.
+func world_to_grid(world:Vector2) -> Point2:
+	var p = Point2.new()
+	p.reset()
+	var half = TILE_SIZE / 2.0 # 中央揃えなので.
+	var i = int((world.x - OFS_X + half) / TILE_SIZE)
+	var j = int((world.y - OFS_Y + half) / TILE_SIZE)
+	if i < 0 or WIDTH <= i:
+		i = -1
+	if j < 0 or HEIGHT <= j:
+		j = -1
+	if i == -1 or j == -1:
+		return p
+	
+	p.set_xy(i, j)
+	return p
+	
 # 下のタイルとの衝突チェックする.
 func check_hit_bottom(tile:TileObj) -> bool:
 	if tile.get_now_y() >= HEIGHT - 1:
@@ -173,6 +224,9 @@ func _create_tile(id:int, x:int, y:int) -> void:
 
 # 生成したタイルをすべて破棄する.
 func remove_all_tiles() -> void:
+	if is_instance_valid(_layer) == false:
+		return # _layerが無効.
+		
 	for tile in _layer.get_children():
 		tile.queue_free()
 
