@@ -1,5 +1,9 @@
 extends Node2D
 
+# ========================================
+# フィールド管理 (常駐).
+# ========================================
+
 # ----------------------------------------
 # 外部参照.
 # ----------------------------------------
@@ -10,10 +14,10 @@ const TileObj = preload("res://Tile.tscn")
 # ----------------------------------------
 # 定数.
 # ----------------------------------------
-const WIDTH = 8
-const HEIGHT = 8
-const OFS_X = 32
-const OFS_Y = 32
+const WIDTH  = 8 # フィールドの幅.
+const HEIGHT = 8 # フィールドの高さ.
+const OFS_X = 32 # フィールドの描画オフセット(X).
+const OFS_Y = 32 # フィールドの描画オフセット(Y).
 
 # ----------------------------------------
 # メンバ変数.
@@ -21,11 +25,17 @@ const OFS_Y = 32
 var _field  = Array2.new(WIDTH, HEIGHT)
 var _tiles  = []
 
-onready var _layer = $Layer
+onready var _layer = $Layer # タイル管理用キャンバスレイヤー.
 
 # ----------------------------------------
 # メンバ関数.
 # ----------------------------------------
+# 初期化.
+func initialize() -> void:
+	_field.fill(Array2.EMPTY)
+	_tiles = []
+
+# 更新.
 func _process(_delta: float) -> void:
 	
 	# 消滅したタイルを消しておく.
@@ -89,12 +99,14 @@ func search_tile(i:int, j:int) -> TileObj:
 	# 見つからなかった.
 	return null
 
+# タイルの生成.
 func _create_tile(id:int, x:int, y:int) -> void:
 	var tile = TileObj.instance()
 	_layer.add_child(tile)
 	_tiles.append(tile)
 	tile.appear(id, x, y)
 
+# ランダムでタイルを生成する.
 func set_random() -> void:
 	for tile in _tiles:
 		tile.queue_free()
@@ -112,12 +124,16 @@ func set_random() -> void:
 	# いったん消しておきます.
 	_field.fill(Array2.EMPTY)
 
+# タイルを交換する.
 func swap(x1:int, y1:int, x2:int, y2:int) -> void:
 	_field.swap(x1, y1, x2, y2)
 
+# 落下を実行する.
 func fall() -> void:
 	_field.fall()
 
+# 消去チェックする.
+# @return 消去するインデックスのリスト.
 func check_erase() -> PoolIntArray:
 	var erase_list = PoolIntArray()
 	
@@ -147,7 +163,7 @@ func check_erase() -> PoolIntArray:
 					cnt = _check_erase_around(tmp, n, cnt, i, j, v[0], v[1])
 				
 				if cnt >= 3:
-					# 消せる.
+					# 3つ以上連続していれば消せる.
 					var list = tmp.search(2)
 					erase_list.append_array(list)
 	
@@ -159,7 +175,7 @@ func check_erase() -> PoolIntArray:
 	
 	return list
 
-
+# 消去チェック (再帰処理用).
 func _check_erase_around(tmp:Array2, n:int, cnt:int, x:int, y:int, vx:int, vy:int) -> int:
 	# 移動先を調べる.
 	var x2 = x + vx
