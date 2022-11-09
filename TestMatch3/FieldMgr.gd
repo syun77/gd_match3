@@ -129,27 +129,59 @@ func _update_erase() -> void:
 	
 	# 消去実行.
 	for idx in erase_list:
-		var x = _field.to_x(idx)
-		var y = _field.to_y(idx)
+		var p = _field.idx_to_pos(idx)
 		#var n = _field.getv(x, y)
 		#print("erase[%d]: (x, y) = (%d, %d)"%[n, x, y])
 		_field.set_idx(idx, Array2.EMPTY)
 
 		# 消滅開始.		
-		var tile = search_tile(x, y)
+		var tile = search_tile(p)
 		tile.start_vanish()	
 
 # 更新 > カーソル.
 func _update_cursor() -> void:
 	
+	if _select.is_valid():
+		if search_tile(_select) == null:
+			# 選択しているタイルが消えたらリセット.
+			_select.reset()
+	
 	if Input.is_action_just_pressed("ui_click"):
 		var pos = get_global_mouse_position()
-		_select = world_to_grid(pos)
+		var _target = world_to_grid(pos)
+		if _can_swap(_select, _target):
+			# 交換してみる.
+			var t1 = search_tile(_select)
+			var t2 = search_tile(_target)
+			t1.start_swap(_target.x, _target.y)
+			t2.start_swap(_select.x, _select.y)
+		else:
+			# 選択し直す.
+			_select = _target
 	
 	_spr_cursor.visible = false
 	if _select.is_valid():
 		_spr_cursor.visible = true
 		_spr_cursor.position = to_world(_select.x, _select.y)
+
+# 交換できるかどうか.
+func _can_swap(sel:Point2, tgt:Point2) -> bool:
+	if sel.is_valid() == false:
+		return false
+	if sel.is_close(tgt) == false:
+		return false
+	
+	var t1 = search_tile(sel)
+	var t2 = search_tile(tgt)
+	if t1 == null or t2 == null:
+		return false
+	
+	# search_tile() できるのは eState.standby のみだけれど念のため.
+	if t1.is_standby() == false or t2.is_standby() == false:
+		return false
+	
+	# 交換可能.
+	return true		
 
 # タイル情報を取得する.
 func getv(i:int, j:int) -> int:
@@ -191,12 +223,12 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	return false
 
 # 指定の位置にあるタイルを探す.
-func search_tile(i:int, j:int) -> TileObj:
+func search_tile(p:Point2) -> TileObj:
 	for tile in _layer.get_children():
 		if tile.is_standby() == false:
 			continue
 		
-		if tile.is_same_pos(i, j) == true:
+		if tile.is_same_pos(p.x, p.y) == true:
 			# 座標が一致.
 			return tile
 	

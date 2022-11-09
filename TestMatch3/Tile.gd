@@ -21,8 +21,9 @@ const Array2 = preload("res://Array2.gd")
 # 重力加速度.
 const GRAVITY_Y = 0.005
 
-# 消滅時間.
-const TIMER_VANISH = 0.5
+# タイマー.
+const TIMER_VANISH = 0.5 # 消滅時間.
+const TIMER_SWAP = 0.1 # 交換.
 
 enum eTile {
 	NONE = 0 # 無効なタイルID
@@ -33,6 +34,7 @@ enum eState {
 	FALLING, # 落下中.
 	STANDBY, # 待機中.
 	VANISH, # 消滅演出中.
+	SWAP, # 交換アニメーション中.
 }
 
 # ----------------------------------------
@@ -48,6 +50,8 @@ var _state = eState.HIDE
 # 現在の座標.
 var _now_x:float = 0
 var _now_y:float = 0
+var _swap_x:float = 0
+var _swap_y:float = 0
 
 # 落下速度.
 var _velocity_y:float = 0
@@ -74,6 +78,7 @@ func set_id(var id):
 	]
 	
 	_rect.color = tbl[id]
+
 	
 func get_id() -> int:
 	return _id
@@ -83,6 +88,7 @@ func get_now_x() -> float:
 func get_now_y() -> float:
 	return _now_y
 
+# 出現開始.
 func appear(id:int, px:float, py:float) -> void:
 	# IDを設定.
 	set_id(id)
@@ -95,6 +101,24 @@ func appear(id:int, px:float, py:float) -> void:
 	
 	# タイル座標系をワールド座標系に変換.
 	position = FieldMgr.to_world(_now_x, _now_y)
+
+# 入れ替え開始.
+func start_swap(next_x:float, next_y:float) -> void:
+	if _state != eState.STANDBY:
+		printerr("eState.STANDBY(%d) 以外では呼び出せません state:%d"%[eState.STANDBY, _state])
+		return
+	
+	_swap_x = next_x
+	_swap_y = next_y
+	
+	_state = eState.SWAP
+	_timer = TIMER_SWAP
+
+# 入れ替え終了.
+func end_swap() -> void:
+	_now_x = _swap_x
+	_now_y = _swap_y
+	_state = eState.STANDBY
 
 # 落下チェック.
 func _check_fall() -> bool:
@@ -153,6 +177,16 @@ func _ready() -> void:
 	set_id(eTile.NONE)
 	visible = false
 
+func _to_world() -> Vector2:
+	if _state == eState.SWAP:
+		# 交換中は特殊処理.
+		var rate = 1.0 - _timer / TIMER_SWAP
+		var px = _now_x + (_swap_x - _now_x) * rate
+		var py = _now_y + (_swap_y - _now_y) * rate
+		return FieldMgr.to_world(px, py)
+	
+	return FieldMgr.to_world(_now_x, _now_y)
+
 # 手動更新関数.
 func proc(delta: float) -> void:
 	if _id == eTile.NONE:
@@ -160,7 +194,7 @@ func proc(delta: float) -> void:
 		return
 	
 	# タイル座標系をワールド座標系に変換.
-	position = FieldMgr.to_world(_now_x, _now_y)
+	position = _to_world()
 	
 	_label.text = "%d"%_id
 	
@@ -187,5 +221,10 @@ func proc(delta: float) -> void:
 			if _timer < 0:
 				# 消滅する.
 				queue_free()
+		eState.SWAP:
+			_timer -= delta
+			if _timer < 0:
+				# 交換終了.
+				end_swap()
 	
 	#_label.text += " X:%3.2f Y:%3.2f"%[_now_x, _now_y]

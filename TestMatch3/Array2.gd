@@ -63,6 +63,11 @@ func to_x(idx:int) -> int:
 	return idx % width
 func to_y(idx:int) -> int:
 	return idx / width
+func idx_to_pos(idx:int) -> Point2:
+	var x = to_x(idx)
+	var y = to_y(idx)
+	return Point2.new(x, y)
+	
 
 # 値を設定する.
 func setv(i:int, j:int, v:int) -> void:
