@@ -32,14 +32,11 @@ func _ready() -> void:
 	# 選択位置をリセットする.
 	_select.reset()
 	
-func _create_tile(id:int, x:int, y:int) -> TileObj:
-	var tile = TileObj.instance()
-	add_child(tile)
-	tile.appear(id, x, y)
-	return tile
+	# フィールドを初期化.
+	FieldMgr.initialize()
 
 # 更新.
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	
 	# カーソルの移動.
 	if Input.is_action_just_pressed("ui_left"):
@@ -54,10 +51,9 @@ func _process(_delta: float) -> void:
 	_cursor.y = clamp(_cursor.y, 0, 7)
 	
 	if Input.is_action_just_pressed("ui_r"):
-		# ランダムにブロックを配置する
+		FieldMgr.initialize()
+		FieldMgr.start()
 		FieldMgr.set_random()
-		# 落下させる
-		#_fall()
 		
 	if Input.is_action_just_pressed("ui_z"):
 		if _cursor.equal(_select) == false:
@@ -75,6 +71,9 @@ func _process(_delta: float) -> void:
 		# 消去チェック.
 		_check_erase()
 		_fall()
+	
+	# フィールドの更新.
+	FieldMgr.proc(delta)
 	
 	update()
 
@@ -99,6 +98,14 @@ func _draw() -> void:
 			if n == Array2.EMPTY:
 				color = Color.gray
 			_draw_tile(n, i, j, 512, 380, color)
+	
+	var idx = 0
+	var y = 32	
+	for tile in FieldMgr.get_all_tiles():
+		var buf = "[%d] n:%d (x, y) : (%1.0f, %1.0f)"%[idx, tile.get_id(), tile.get_now_x(), tile.get_now_y()]
+		draw_string(_font, Vector2(800, y), buf)
+		idx += 1
+		y += 20
 
 func _draw_tile(n:int, x:int, y:int, x_ofs:float, y_ofs:float, color:Color) -> void:
 	var buf = "%d"%n

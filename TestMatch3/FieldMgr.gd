@@ -17,9 +17,16 @@ const TileObj = preload("res://Tile.tscn")
 const WIDTH  = 8 # フィールドの幅.
 const HEIGHT = 8 # フィールドの高さ.
 const OFS_X = 32 # フィールドの描画オフセット(X).
-const OFS_Y = 32 # フィールドの描画オフセット(Y).
+const OFS_Y = 320 # フィールドの描画オフセット(Y).
 
 const ERASE_CNT = 3 # 3つ並んだら消去する.
+const TILE_TYPE = 4 # 4種類出現する
+
+# 状態.
+enum eState {
+	HIDE,   # 非表示.
+	ACTIVE, # アクティブ.
+}
 
 # 消去種別 (消去判定で使用する).
 enum eEraseType {
@@ -31,7 +38,8 @@ enum eEraseType {
 # ----------------------------------------
 # メンバ変数.
 # ----------------------------------------
-var _field  = Array2.new(WIDTH, HEIGHT)
+var _state = eState.HIDE
+var _field = Array2.new(WIDTH, HEIGHT)
 
 # ----------------------------------------
 # onready.
@@ -47,18 +55,45 @@ func initialize() -> void:
 	_field.fill(Array2.EMPTY)
 	
 	# タイルをすべて消しておく.
-	remove_all()
+	remove_all_tiles()
+	
+	# 初期状態は非表示.
+	_state = eState.HIDE
 
-# 生成したタイルをすべて破棄する.
-func remove_all() -> void:
+# 表示開始.
+func start() -> void:
+	_state = eState.ACTIVE
+
+# 手動更新関数.
+func proc(delta: float) -> void:	
+	if _state == eState.HIDE:
+		return # 動作しない.
+	
+	# タイルの更新.
 	for tile in _layer.get_children():
-		tile.queue_free()	
-
-# 更新.
-func _process(_delta: float) -> void:	
+		tile.proc(delta)
+		
+	# 新しいタイル出現チェック
+	for i in range(_field.width):
+		# 1列あたりに HEIGHT のタイルで埋まるようにする.
+		var list = _search_x_tiles(i)
+		var d = _field.height - len(list)
+		if d <= 0:
+			continue
+		
+		var min_y := -1.0 # 最大の高さ (座標系としては最小値) 
+		for tile in list:
+			var py = tile.get_now_y()
+			min_y = min(py, min_y)
+		# 足りないぶんだけ生成する.
+		for _k in range(d):
+			var n = randi()%TILE_TYPE + 1
+			_create_tile(n, i, int(min_y))
+			min_y -= 1.0
 	
 	# 消去判定を行う.
 	_update_erase()
+
 
 # 更新 > 消去処理
 func _update_erase() -> void:
@@ -81,7 +116,7 @@ func _update_erase() -> void:
 	for idx in erase_list:
 		var x = _field.to_x(idx)
 		var y = _field.to_y(idx)
-		var n = _field.getv(x, y)
+		#var n = _field.getv(x, y)
 		#print("erase[%d]: (x, y) = (%d, %d)"%[n, x, y])
 		_field.set_idx(idx, Array2.EMPTY)
 
@@ -117,22 +152,38 @@ func search_tile(i:int, j:int) -> TileObj:
 	# 見つからなかった.
 	return null
 
+# 指定のX座標に存在するタイルをすべて取得する.
+func _search_x_tiles(x:int):
+	var ret = []
+	for tile in _layer.get_children():
+		if int(tile.get_now_x()) == x:
+			ret.append(tile)
+	
+	return ret
+
+# すべてのタイルを取得する.]
+func get_all_tiles():
+	return _layer.get_children()
+
 # タイルの生成.
 func _create_tile(id:int, x:int, y:int) -> void:
 	var tile = TileObj.instance()
 	_layer.add_child(tile)
 	tile.appear(id, x, y)
 
+# 生成したタイルをすべて破棄する.
+func remove_all_tiles() -> void:
+	for tile in _layer.get_children():
+		tile.queue_free()
+
 # ランダムでタイルを生成する.
 func set_random() -> void:
 	# いったんタイルを全削除しておく.
-	remove_all()
+	remove_all_tiles()
 	
 	for idx in range(_field.width * _field.height):
-		var v = randi()%4
+		var v = randi()%TILE_TYPE + 1
 		_field.set_idx(idx, v)
-		if v == Array2.EMPTY:
-			continue
 		var px = _field.to_x(idx)
 		var py = _field.to_y(idx)
 		_create_tile(v, px, py)
@@ -186,7 +237,7 @@ func check_erase() -> PoolIntArray:
 	var list = PoolIntArray()
 	for idx in erase_list:
 		if list.has(idx) == false:
-			list.append(idx)
+			list.append(idx) # 未登録のもののみ追加.
 	
 	return list
 
@@ -208,6 +259,7 @@ func _check_erase_recursive(tmp:Array2, n:int, cnt:int, x:int, y:int, vx:int, vy
 	# 消せるかもしれない.
 	cnt += 1
 	tmp.setv(x2, y2, eEraseType.REMOVE)
+	
 	# 次を調べる.
 	return _check_erase_recursive(tmp, n, cnt, x2, y2, vx, vy)
 

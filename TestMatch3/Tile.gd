@@ -21,7 +21,7 @@ const Array2 = preload("res://Array2.gd")
 const TILE_SIZE = 32
 
 # 重力加速度.
-const GRAVITY_Y = 0.001
+const GRAVITY_Y = 0.005
 
 # 消滅時間.
 const TIMER_VANISH = 0.5
@@ -94,6 +94,9 @@ func appear(id:int, px:float, py:float) -> void:
 	
 	_state = eState.FALLING
 	visible = true
+	
+	# タイル座標系をワールド座標系に変換.
+	position = to_world(_now_x, _now_y)
 
 # 落下チェック.
 func _check_fall() -> bool:
@@ -106,7 +109,7 @@ func _check_fall() -> bool:
 func check_hit_bottom(tile:TileObj) -> bool:
 	
 	var obj_id = tile.get_instance_id()
-	var number = tile.get_id()
+	#var number = tile.get_id()
 	var tile_x = tile.get_now_x()
 	var tile_y = tile.get_now_y()
 	
@@ -124,7 +127,10 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	var upper = tile_y - 0.5 # 下のブロックのトップ
 	if bottom < upper:
 		return false # 重なっていない.
-		
+	
+	# 更新タイミングの関係でめり込んでいたら押し返す.
+	_now_y -= (bottom - upper)
+	
 	return true
 
 func to_world(x:float, y:float) -> Vector2:
@@ -155,7 +161,8 @@ func _ready() -> void:
 	set_id(eTile.NONE)
 	visible = false
 
-func _process(delta: float) -> void:
+# 手動更新関数.
+func proc(delta: float) -> void:
 	if _id == eTile.NONE:
 		visible = false
 		return
