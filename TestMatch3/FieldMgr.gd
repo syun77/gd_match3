@@ -23,8 +23,10 @@ const OFS_Y = 32 # フィールドの描画オフセット(Y).
 # メンバ変数.
 # ----------------------------------------
 var _field  = Array2.new(WIDTH, HEIGHT)
-var _tiles  = []
 
+# ----------------------------------------
+# onready.
+# ----------------------------------------
 onready var _layer = $Layer # タイル管理用キャンバスレイヤー.
 
 # ----------------------------------------
@@ -33,24 +35,20 @@ onready var _layer = $Layer # タイル管理用キャンバスレイヤー.
 # 初期化.
 func initialize() -> void:
 	_field.fill(Array2.EMPTY)
-	_tiles = []
+	remove_all()
+
+# 生成したタイルをすべて破棄する.
+func remove_all() -> void:
+	for tile in _layer.get_children():
+		tile.queue_free()	
 
 # 更新.
-func _process(_delta: float) -> void:
-	
-	# 消滅したタイルを消しておく.
-	var tmp = []
-	for tile in _tiles:
-		if is_instance_valid(tile):
-			# 有効なタイルのみ追加
-			tmp.append(tile)
-	_tiles = tmp
-	
+func _process(_delta: float) -> void:	
 	# いったん初期化.
 	_field.fill(Array2.EMPTY)
 	
 	# フィールド情報を更新.
-	for tile in _tiles:
+	for tile in _layer.get_children():
 		if tile.is_standby() == false:
 			continue
 		var px = tile.get_now_x()
@@ -80,7 +78,7 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	if tile.get_now_y() >= HEIGHT - 1:
 		return true
 	
-	for t in _tiles:
+	for t in _layer.get_children():
 		if tile.check_hit_bottom(t):
 			return true
 	
@@ -88,7 +86,7 @@ func check_hit_bottom(tile:TileObj) -> bool:
 
 # 指定の位置にあるタイルを探す.
 func search_tile(i:int, j:int) -> TileObj:
-	for tile in _tiles:
+	for tile in _layer.get_children():
 		if tile.is_standby() == false:
 			continue
 		
@@ -103,14 +101,12 @@ func search_tile(i:int, j:int) -> TileObj:
 func _create_tile(id:int, x:int, y:int) -> void:
 	var tile = TileObj.instance()
 	_layer.add_child(tile)
-	_tiles.append(tile)
 	tile.appear(id, x, y)
 
 # ランダムでタイルを生成する.
 func set_random() -> void:
-	for tile in _tiles:
-		tile.queue_free()
-	_tiles = []
+	# いったんタイルを全削除しておく.
+	remove_all()
 	
 	for idx in range(_field.width * _field.height):
 		var v = randi()%4
