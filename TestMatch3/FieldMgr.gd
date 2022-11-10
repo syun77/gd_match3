@@ -29,6 +29,14 @@ enum eState {
 	ACTIVE, # アクティブ.
 }
 
+# ドラッグ状態.
+enum eDrag {
+	NONE,          # 何もしていない.
+	JUST_PRESSED,  # クリック開始した.
+	PRESSED,       # ドラッグ中.
+	JUST_RELEASED, # クリック終了.
+}
+
 # 消去種別 (消去判定で使用する).
 enum eEraseType {
 	EMPTY  = 0 # 空.
@@ -39,9 +47,10 @@ enum eEraseType {
 # ----------------------------------------
 # メンバ変数.
 # ----------------------------------------
-var _state  = eState.HIDE # 状態.
-var _field  = Array2.new(WIDTH, HEIGHT) # フィールド情報.
-var _select = Point2.new() # 選択カーソル.
+var _state   = eState.HIDE # 状態.
+var _field   = Array2.new(WIDTH, HEIGHT) # フィールド情報.
+var _select  = Point2.new() # 選択カーソル.
+var _dragpos = Point2.new() # ドラッグ開始位置.
 
 # ----------------------------------------
 # onready.
@@ -68,6 +77,7 @@ func initialize() -> void:
 	_select.reset()
 	if is_instance_valid(_spr_cursor):
 		_spr_cursor.visible = false
+	_dragpos.reset()
 	
 	# 初期状態は非表示.
 	_state = eState.HIDE
@@ -145,19 +155,27 @@ func _update_cursor() -> void:
 		if search_tile(_select) == null:
 			# 選択しているタイルが消えたらリセット.
 			_select.reset()
+			_dragpos.reset()
 	
-	if Input.is_action_just_pressed("ui_click"):
-		var pos = get_global_mouse_position()
-		var _target = world_to_grid(pos)
-		if _can_swap(_select, _target):
-			# 交換してみる.
-			var t1 = search_tile(_select)
-			var t2 = search_tile(_target)
-			t1.start_swap(_target.x, _target.y)
-			t2.start_swap(_select.x, _select.y)
-		else:
-			# 選択し直す.
-			_select = _target
+	var drag = _get_click()
+	var pos = get_global_mouse_position()
+	var target = world_to_grid(pos)
+	
+	
+	match drag:
+		eDrag.JUST_PRESSED:
+			if _can_swap(_select, target):
+				# 交換してみる.
+				_do_swap(_select, target)
+			else:
+				# 選択し直す.
+				_select = target
+		eDrag.PRESSED:
+			if _can_swap(_select, target):
+				# 交換してみる.
+				_do_swap(_select, target)
+		eDrag.JUST_RELEASED:
+			pass
 	
 	_spr_cursor.visible = false
 	if _select.is_valid():
@@ -181,7 +199,25 @@ func _can_swap(sel:Point2, tgt:Point2) -> bool:
 		return false
 	
 	# 交換可能.
-	return true		
+	return true
+
+# 交換を実行する.
+func _do_swap(sel:Point2, tgt:Point2) -> void:
+	var t1 = search_tile(sel)
+	var t2 = search_tile(tgt)
+	t1.start_swap(tgt.x, tgt.y)
+	t2.start_swap(sel.x, sel.y)
+
+func _get_click():
+	if Input.is_action_just_pressed("ui_click"):
+		return eDrag.JUST_PRESSED
+	if Input.is_action_pressed("ui_click"):
+		return eDrag.PRESSED
+	if Input.is_action_just_released("ui_click"):
+		return eDrag.JUST_RELEASED
+	
+	# 何もしていない.
+	return eDrag.NONE
 
 # タイル情報を取得する.
 func getv(i:int, j:int) -> int:
