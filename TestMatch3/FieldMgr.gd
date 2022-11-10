@@ -185,14 +185,14 @@ func _update_cursor() -> void:
 # 交換できるかどうか.
 func _can_swap(sel:Point2, tgt:Point2) -> bool:
 	if sel.is_valid() == false:
-		return false
+		return false # カーソルで選択していない.
 	if sel.is_close(tgt) == false:
-		return false
+		return false # 交換先が隣のタイルでない
 	
 	var t1 = search_tile(sel)
 	var t2 = search_tile(tgt)
 	if t1 == null or t2 == null:
-		return false
+		return false # タイルが取得できない.
 	
 	# search_tile() できるタイルは eState.standby のみだけれど念のため.
 	if t1.is_standby() == false or t2.is_standby() == false:
@@ -208,13 +208,14 @@ func _do_swap(sel:Point2, tgt:Point2) -> void:
 	t1.start_swap(tgt.x, tgt.y)
 	t2.start_swap(sel.x, sel.y)
 
+# クリック状態を取得する.
 func _get_click():
 	if Input.is_action_just_pressed("ui_click"):
-		return eDrag.JUST_PRESSED
+		return eDrag.JUST_PRESSED # クリックした瞬間.
 	if Input.is_action_pressed("ui_click"):
-		return eDrag.PRESSED
+		return eDrag.PRESSED # クリック中(ドラッグ中)
 	if Input.is_action_just_released("ui_click"):
-		return eDrag.JUST_RELEASED
+		return eDrag.JUST_RELEASED # クリックを離した.
 	
 	# 何もしていない.
 	return eDrag.NONE
@@ -283,7 +284,7 @@ func _search_x_tiles(x:int):
 	
 	return ret
 
-# すべてのタイルを取得する.]
+# すべてのタイルを取得する.
 func get_all_tiles():
 	return _layer.get_children()
 

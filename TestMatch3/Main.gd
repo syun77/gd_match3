@@ -25,10 +25,12 @@ var _font:BitmapFont
 # メンバ関数.
 # ----------------------------------------
 func _ready() -> void:
+	# デバッグ描画用のフォント.
 	_font = Control.new().get_font("font")
 	
 	# フィールドを初期化.
 	FieldMgr.initialize()
+	FieldMgr.start()
 
 # 更新.
 func _process(delta: float) -> void:
@@ -45,7 +47,9 @@ func _process(delta: float) -> void:
 # 入力の更新.
 func _update_input() -> void:
 	
+	# Rキー.
 	if Input.is_action_just_pressed("ui_r"):
+		# ゲームをリセットする.
 		FieldMgr.initialize()
 		FieldMgr.start()
 		FieldMgr.set_random()
