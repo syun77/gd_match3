@@ -105,7 +105,7 @@ func proc(delta: float) -> void:
 		
 		var min_y := -1.0 # 最大の高さ (座標系としては最小値) 
 		for tile in list:
-			var py = tile.get_now_y()
+			var py = tile.get_grid_y()
 			min_y = min(py, min_y)
 		# 足りないぶんだけ生成する.
 		for _k in range(d):
@@ -129,8 +129,8 @@ func _update_erase() -> void:
 	for tile in _layer.get_children():
 		if tile.is_standby() == false:
 			continue
-		var px = tile.get_now_x()
-		var py = tile.get_now_y()
+		var px = tile.get_grid_x()
+		var py = tile.get_grid_y()
 		var num = tile.get_id()
 		_field.setv(int(px), int(py), num)
 	
@@ -157,10 +157,12 @@ func _update_cursor() -> void:
 			_select.reset()
 			_dragpos.reset()
 	
+	# ドラッグ状態.
 	var drag = _get_click()
+	# マウス座標を取得.
 	var pos = get_global_mouse_position()
+	# グリッド座標系に変換.
 	var target = world_to_grid(pos)
-	
 	
 	match drag:
 		eDrag.JUST_PRESSED:
@@ -251,7 +253,7 @@ func world_to_grid(world:Vector2) -> Point2:
 	
 # 下のタイルとの衝突チェックする.
 func check_hit_bottom(tile:TileObj) -> bool:
-	if tile.get_now_y() >= HEIGHT - 1:
+	if tile.get_grid_y() >= HEIGHT - 1:
 		return true # Y座標の最大なので常に衝突.
 
 	# タイルとの衝突チェック.	
@@ -279,8 +281,8 @@ func search_tile(p:Point2) -> TileObj:
 func _search_x_tiles(x:int):
 	var ret = []
 	for tile in _layer.get_children():
-		if int(tile.get_now_x()) == x:
-			ret.append(tile)
+		if int(tile.get_grid_x()) == x:
+			ret.append(tile) # X座標が一致した.
 	
 	return ret
 

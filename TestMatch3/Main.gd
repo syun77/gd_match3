@@ -69,7 +69,7 @@ func _draw() -> void:
 	#var idx = 0
 	#var y = 32	
 	#for tile in FieldMgr.get_all_tiles():
-	#	var buf = "[%d] n:%d (x, y) : (%1.0f, %1.0f)"%[idx, tile.get_id(), tile.get_now_x(), tile.get_now_y()]
+	#	var buf = "[%d] n:%d (x, y) : (%1.0f, %1.0f)"%[idx, tile.get_id(), tile.get_grid_x(), tile.get_grid_y()]
 	#	draw_string(_font, Vector2(800, y), buf)
 	#	idx += 1
 	#	y += 20

@@ -18,7 +18,7 @@ const Array2 = preload("res://Array2.gd")
 # 定数.
 # ----------------------------------------
 # 重力加速度.
-const GRAVITY_Y = 0.005
+const GRAVITY_Y = 0.5
 
 # タイマー.
 const TIMER_VANISH = 0.5 # 消滅時間.
@@ -46,10 +46,10 @@ var _id:int = 0
 var _timer:float = 0
 var _state = eState.HIDE
 
-# 現在の座標.
-var _now_x:float = 0
-var _now_y:float = 0
-# 交換先の座標.
+# 現在のグリッド座標.
+var _grid_x:float = 0
+var _grid_y:float = 0
+# 交換先のグリッド座標.
 var _swap_x:float = 0
 var _swap_y:float = 0
 
@@ -87,10 +87,10 @@ func get_id() -> int:
 	return _id
 
 # 現在の座標(グリッド座標)を取得する.
-func get_now_x() -> float:
-	return _now_x
-func get_now_y() -> float:
-	return _now_y
+func get_grid_x() -> float:
+	return _grid_x
+func get_grid_y() -> float:
+	return _grid_y
 
 # 開始処理.
 func _ready() -> void:
@@ -102,14 +102,14 @@ func appear(id:int, px:float, py:float) -> void:
 	# IDを設定.
 	set_id(id)
 	
-	_now_x = px
-	_now_y = py
+	_grid_x = px
+	_grid_y = py
 	
 	_state = eState.FALLING
 	visible = true
 	
-	# タイル座標系をワールド座標系に変換.
-	position = FieldMgr.to_world(_now_x, _now_y)
+	# グリッド座標系をワールド座標系に変換.
+	position = FieldMgr.to_world(_grid_x, _grid_y)
 
 # 入れ替え開始.
 func start_swap(next_x:float, next_y:float) -> void:
@@ -125,8 +125,8 @@ func start_swap(next_x:float, next_y:float) -> void:
 
 # 入れ替え終了.
 func end_swap() -> void:
-	_now_x = _swap_x
-	_now_y = _swap_y
+	_grid_x = _swap_x
+	_grid_y = _swap_y
 	_state = eState.STANDBY
 
 # 落下チェック.
@@ -141,33 +141,33 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	
 	var obj_id = tile.get_instance_id()
 	#var number = tile.get_id()
-	var tile_x = tile.get_now_x()
-	var tile_y = tile.get_now_y()
+	var tile_x = tile.get_grid_x()
+	var tile_y = tile.get_grid_y()
 	
 	# ユニークIDを比較.
 	if get_instance_id() == obj_id:
 		return false # 自分自身は除外.
 	
-	if _now_x != tile_x:
+	if _grid_x != tile_x:
 		return false # 別のX座標のブロック
 	
-	if _now_y > tile_y:
+	if _grid_y > tile_y:
 		return false # 対象のタイルがそもそも上にあるので判定不要.
 		
-	var bottom = _now_y + 0.5 # 上のブロックの底
+	var bottom = _grid_y + 0.5 # 上のブロックの底
 	var upper = tile_y - 0.5 # 下のブロックのトップ
 	if bottom < upper:
 		return false # 重なっていない.
 	
 	# 更新タイミングの関係でめり込んでいたら押し返す.
-	_now_y -= (bottom - upper)
+	_grid_y -= (bottom - upper)
 	
 	return true
 
 # グリッドにフィットするように調整する.
 func fit_grid() -> void:
-	_now_x = int(_now_x)
-	_now_y = int(_now_y)
+	_grid_x = int(_grid_x)
+	_grid_y = int(_grid_y)
 
 # 非表示状態かどうか.
 func is_hide() -> bool:
@@ -179,7 +179,7 @@ func is_standby() -> bool:
 
 # 指定の位置にタイルが存在するかどうか.
 func is_same_pos(i:int, j:int) -> bool:
-	if i == int(_now_x) and j == int(_now_y):
+	if i == int(_grid_x) and j == int(_grid_y):
 		return true	
 	return false
 
@@ -192,11 +192,11 @@ func _to_world() -> Vector2:
 	if _state == eState.SWAP:
 		# 交換中は特殊処理.
 		var rate = 1.0 - _timer / TIMER_SWAP
-		var px = _now_x + (_swap_x - _now_x) * rate
-		var py = _now_y + (_swap_y - _now_y) * rate
+		var px = _grid_x + (_swap_x - _grid_x) * rate
+		var py = _grid_y + (_swap_y - _grid_y) * rate
 		return FieldMgr.to_world(px, py)
 	
-	return FieldMgr.to_world(_now_x, _now_y)
+	return FieldMgr.to_world(_grid_x, _grid_y)
 
 # 手動更新関数.
 func proc(delta: float) -> void:
@@ -214,8 +214,8 @@ func proc(delta: float) -> void:
 			visible = false
 		eState.FALLING: # 落下中.
 			_label.text = "F"
-			_velocity_y += GRAVITY_Y	
-			_now_y += _velocity_y
+			_velocity_y += GRAVITY_Y	 * delta
+			_grid_y += _velocity_y
 			if _check_fall() == false:
 				# 移動完了.
 				fit_grid()
@@ -238,4 +238,4 @@ func proc(delta: float) -> void:
 				# 交換終了.
 				end_swap()
 	
-	#_label.text += " X:%3.2f Y:%3.2f"%[_now_x, _now_y]
+	#_label.text += " X:%3.2f Y:%3.2f"%[_grid_x, _grid_y]
