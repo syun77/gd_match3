@@ -52,7 +52,6 @@ func _update_input() -> void:
 		# ゲームをリセットする.
 		FieldMgr.initialize()
 		FieldMgr.start()
-		FieldMgr.set_random()
 
 # デバッグ描画.
 func _draw() -> void:
