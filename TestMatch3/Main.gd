@@ -1,7 +1,7 @@
 extends Node2D
 
 # ========================================
-# フィールド管理 (常駐).
+# メイン.
 # ========================================
 
 # ----------------------------------------
@@ -20,17 +20,12 @@ const TileObj = preload("res://Tile.tscn")
 # メンバ変数.
 # ----------------------------------------
 var _font:BitmapFont
-var _cursor = Point2.new()
-var _select = Point2.new()
-
 
 # ----------------------------------------
 # メンバ関数.
 # ----------------------------------------
 func _ready() -> void:
 	_font = Control.new().get_font("font")
-	# 選択位置をリセットする.
-	_select.reset()
 	
 	# フィールドを初期化.
 	FieldMgr.initialize()
@@ -49,43 +44,14 @@ func _process(delta: float) -> void:
 
 # 入力の更新.
 func _update_input() -> void:
-	# カーソルの移動.
-	if Input.is_action_just_pressed("ui_left"):
-		_cursor.x -= 1
-	if Input.is_action_just_pressed("ui_right"):
-		_cursor.x += 1
-	if Input.is_action_just_pressed("ui_up"):
-		_cursor.y -= 1
-	if Input.is_action_just_pressed("ui_down"):
-		_cursor.y += 1
-	_cursor.x = clamp(_cursor.x, 0, 7)
-	_cursor.y = clamp(_cursor.y, 0, 7)
 	
 	if Input.is_action_just_pressed("ui_r"):
 		FieldMgr.initialize()
 		FieldMgr.start()
 		FieldMgr.set_random()
-		
-	if Input.is_action_just_pressed("ui_z"):
-		if _cursor.equal(_select) == false:
-			# 同じでなければ変更
-			if _select.is_valid() and _select.is_close(_cursor):
-				# 隣の位置なら値を交換する
-				FieldMgr.swap(_select.x, _select.y, _cursor.x, _cursor.y)
-				# 選択位置をリセットする
-				_select.reset()
-			else:
-				# 選択位置をカーソルに合わせる.
-				_select.copy(_cursor)
-
 
 # デバッグ描画.
 func _draw() -> void:
-	
-	# カーソルの描画.
-	_draw_cursor(_cursor.x, _cursor.y, Color.red, 640, 380)
-	if _select.is_valid():
-		_draw_cursor(_select.x, _select.y, Color.yellow, 640, 380)
 	
 	# フィールドの状態を描画.
 	for j in range(FieldMgr.HEIGHT):
@@ -117,5 +83,3 @@ func _draw_cursor(x:int, y:int, color:Color, x_ofs:float, y_ofs:float) -> void:
 		Vector2(20, 20)
 	)
 	draw_rect(rect, color, false)
-
-	

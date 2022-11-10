@@ -59,6 +59,7 @@ func swap(x1:int, y1:int, x2:int, y2:int) -> void:
 func to_idx(i:int, j:int) -> int:
 	return j * width + i
 
+# インデックスを(x, y)に変換する.
 func to_x(idx:int) -> int:
 	return idx % width
 func to_y(idx:int) -> int:
@@ -67,7 +68,6 @@ func idx_to_pos(idx:int) -> Point2:
 	var x = to_x(idx)
 	var y = to_y(idx)
 	return Point2.new(x, y)
-	
 
 # 値を設定する.
 func setv(i:int, j:int, v:int) -> void:

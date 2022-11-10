@@ -14,7 +14,6 @@ class_name TileObj
 # ----------------------------------------
 const Array2 = preload("res://Array2.gd")
 
-
 # ----------------------------------------
 # 定数.
 # ----------------------------------------
@@ -50,6 +49,7 @@ var _state = eState.HIDE
 # 現在の座標.
 var _now_x:float = 0
 var _now_y:float = 0
+# 交換先の座標.
 var _swap_x:float = 0
 var _swap_y:float = 0
 
@@ -65,8 +65,11 @@ onready var _label = $Label
 # ----------------------------------------
 # メンバ関数.
 # ----------------------------------------
+# タイルIDを設定.
 func set_id(var id):
 	_id = id
+	
+	# 色を設定しておく.
 	var tbl = [
 		Color.white,
 		Color.red,
@@ -79,14 +82,20 @@ func set_id(var id):
 	
 	_rect.color = tbl[id]
 
-	
+# タイルIDを取得する.
 func get_id() -> int:
 	return _id
 
+# 現在の座標(グリッド座標)を取得する.
 func get_now_x() -> float:
 	return _now_x
 func get_now_y() -> float:
 	return _now_y
+
+# 開始処理.
+func _ready() -> void:
+	set_id(eTile.NONE)
+	visible = false
 
 # 出現開始.
 func appear(id:int, px:float, py:float) -> void:
@@ -155,27 +164,29 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	
 	return true
 
+# グリッドにフィットするように調整する.
 func fit_grid() -> void:
 	_now_x = int(_now_x)
 	_now_y = int(_now_y)
 
+# 非表示状態かどうか.
 func is_hide() -> bool:
 	return _state == eState.HIDE
+
+# 消去や移動判定可能な状態かどうか.
 func is_standby() -> bool:
 	return _state == eState.STANDBY
 
+# 指定の位置にタイルが存在するかどうか.
 func is_same_pos(i:int, j:int) -> bool:
 	if i == int(_now_x) and j == int(_now_y):
 		return true	
 	return false
-	
+
+# 消滅処理開始.
 func start_vanish() -> void:
 	_state = eState.VANISH
 	_timer = TIMER_VANISH
-
-func _ready() -> void:
-	set_id(eTile.NONE)
-	visible = false
 
 func _to_world() -> Vector2:
 	if _state == eState.SWAP:

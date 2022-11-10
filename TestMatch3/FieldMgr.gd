@@ -176,7 +176,7 @@ func _can_swap(sel:Point2, tgt:Point2) -> bool:
 	if t1 == null or t2 == null:
 		return false
 	
-	# search_tile() できるのは eState.standby のみだけれど念のため.
+	# search_tile() できるタイルは eState.standby のみだけれど念のため.
 	if t1.is_standby() == false or t2.is_standby() == false:
 		return false
 	
@@ -197,7 +197,6 @@ func to_world(x:float, y:float) -> Vector2:
 # ワールド座標をグリッド座標系に変換する.
 func world_to_grid(world:Vector2) -> Point2:
 	var p = Point2.new()
-	p.reset()
 	var half = TILE_SIZE / 2.0 # 中央揃えなので.
 	var i = int((world.x - OFS_X + half) / TILE_SIZE)
 	var j = int((world.y - OFS_Y + half) / TILE_SIZE)
@@ -206,6 +205,8 @@ func world_to_grid(world:Vector2) -> Point2:
 	if j < 0 or HEIGHT <= j:
 		j = -1
 	if i == -1 or j == -1:
+		# 無効な値なのでリセット.
+		p.reset()
 		return p
 	
 	p.set_xy(i, j)
@@ -214,12 +215,14 @@ func world_to_grid(world:Vector2) -> Point2:
 # 下のタイルとの衝突チェックする.
 func check_hit_bottom(tile:TileObj) -> bool:
 	if tile.get_now_y() >= HEIGHT - 1:
-		return true
-	
+		return true # Y座標の最大なので常に衝突.
+
+	# タイルとの衝突チェック.	
 	for t in _layer.get_children():
 		if tile.check_hit_bottom(t):
 			return true
 	
+	# どのタイルとも衝突していない.
 	return false
 
 # 指定の位置にあるタイルを探す.
@@ -251,13 +254,15 @@ func get_all_tiles():
 # タイルの生成.
 func _create_tile(id:int, x:int, y:int) -> void:
 	var tile = TileObj.instance()
+	# CanvasLayerに登録する.
 	_layer.add_child(tile)
+	# 出現開始.
 	tile.appear(id, x, y)
 
 # 生成したタイルをすべて破棄する.
 func remove_all_tiles() -> void:
 	if is_instance_valid(_layer) == false:
-		return # _layerが無効.
+		return # _layerが無効なので何もしない.
 		
 	for tile in _layer.get_children():
 		tile.queue_free()
@@ -290,15 +295,16 @@ func fall() -> void:
 func check_erase() -> PoolIntArray:
 	var erase_list = PoolIntArray()
 	
+	# 消去判定用の2次元配列.
 	var tmp = Array2.new(WIDTH, HEIGHT)
 	
 	for j in range(_field.height):
 		for i in range(_field.width):
 			var n = _field.getv(i, j)
 			if n == Array2.EMPTY:
-				# 空なので判定不要.
-				continue
+				continue	 # 空なので判定不要.
 			
+			# 上下と左右を分けて判定する.
 			for k in range(2):
 				# 初期化.
 				tmp.fill(eEraseType.EMPTY)
@@ -311,6 +317,7 @@ func check_erase() -> PoolIntArray:
 					# 左右を調べる.
 					tbl = [[-1, 0], [1, 0]]
 				
+				#  消去判定の再帰処理呼び出し.
 				for v in tbl:
 					cnt = _check_erase_recursive(tmp, n, cnt, i, j, v[0], v[1])
 				

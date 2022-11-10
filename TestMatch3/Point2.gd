@@ -42,7 +42,7 @@ func equal(src) -> bool:
 func is_valid() -> bool:
 	return x !=INVALID and y != INVALID
 
-# 近くかどうか.
+# 近く(隣の上下左右)かどうか.
 func is_close(src) -> bool:
 	var d = abs(x - src.x)
 	d += abs(y - src.y)
