@@ -59,7 +59,7 @@ var _velocity_y:float = 0
 # ----------------------------------------
 # onready.
 # ----------------------------------------
-onready var _rect = $ColorRect
+onready var _spr = $Sprite
 onready var _label = $Label
 
 # ----------------------------------------
@@ -69,18 +69,20 @@ onready var _label = $Label
 func set_id(var id):
 	_id = id
 	
-	# 色を設定しておく.
+	# IDに対応する画像を設定する
 	var tbl = [
-		Color.white,
-		Color.red,
-		Color.green,
-		Color.aqua,
-		Color.magenta,
-		Color.yellow,
-		Color.white
+		"tile_red.png", # ID=0は無効だけれども念のため設定.
+		"tile_red.png",
+		"tile_yellow.png",
+		"tile_green.png",
+		"tile_magenta.png",
+		"tile_blue.png",
+		"tile_orange.png",
+		"tile_sliver.png",
+		"tile_gold.png"
 	]
 	
-	_rect.color = tbl[id]
+	_spr.texture = load("res://assets/tiles/%s"%tbl[_id])
 
 # タイルIDを取得する.
 func get_id() -> int:
