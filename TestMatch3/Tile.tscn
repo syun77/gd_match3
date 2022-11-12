@@ -17,6 +17,7 @@ texture = ExtResource( 3 )
 shape = SubResource( 1 )
 
 [node name="Label" type="Label" parent="."]
+visible = false
 margin_left = -29.0
 margin_top = -23.0
 margin_right = 28.0
