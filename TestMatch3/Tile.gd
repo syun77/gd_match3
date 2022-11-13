@@ -141,6 +141,7 @@ func _check_fall() -> bool:
 # @param tile 判定する下のタイル 
 func check_hit_bottom(tile:TileObj) -> bool:
 	
+	# 衝突チェックするタイルの情報を取り出す.	
 	var obj_id = tile.get_instance_id()
 	#var number = tile.get_id()
 	var tile_x = tile.get_grid_x()
