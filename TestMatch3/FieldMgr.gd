@@ -339,6 +339,7 @@ func check_erase() -> PoolIntArray:
 	
 	for j in range(_field.height):
 		for i in range(_field.width):
+			# 開始タイルを決める.
 			var n = _field.getv(i, j)
 			if n == Array2.EMPTY:
 				continue	 # 空なので判定不要.

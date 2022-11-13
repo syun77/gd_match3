@@ -216,7 +216,9 @@ func proc(delta: float) -> void:
 			visible = false
 		eState.FALLING: # 落下中.
 			_label.text = "F"
+			# 重力を加算.
 			_velocity_y += GRAVITY_Y	 * delta
+			# 速度を位置に加算.
 			_grid_y += _velocity_y
 			if _check_fall() == false:
 				# 移動完了.
