@@ -142,10 +142,10 @@ func _check_fall() -> bool:
 func check_hit_bottom(tile:TileObj) -> bool:
 	
 	# 衝突チェックするタイルの情報を取り出す.	
-	var obj_id = tile.get_instance_id()
-	#var number = tile.get_id()
-	var tile_x = tile.get_grid_x()
-	var tile_y = tile.get_grid_y()
+	var obj_id = tile.get_instance_id() # インスタンス番号
+	#var number = tile.get_id() # タイル番号 (デバッグ用)
+	var tile_x = tile.get_grid_x() # グリッド座標(X)
+	var tile_y = tile.get_grid_y() # グリッド座標(Y)
 	
 	# ユニークIDを比較.
 	if get_instance_id() == obj_id:
