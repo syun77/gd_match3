@@ -19,14 +19,14 @@ const TileObj = preload("res://Tile.tscn")
 # ----------------------------------------
 # メンバ変数.
 # ----------------------------------------
-var _font:BitmapFont
+var _font:FontFile
 
 # ----------------------------------------
 # メンバ関数.
 # ----------------------------------------
 func _ready() -> void:
 	# デバッグ描画用のフォント.
-	_font = Control.new().get_font("font")
+	_font = Control.new().get_theme_font("font")
 	
 	# フィールドを初期化.
 	FieldMgr.initialize()
@@ -42,7 +42,7 @@ func _process(delta: float) -> void:
 	FieldMgr.proc(delta)
 	
 	# デバッグ描画.
-	update()
+	queue_redraw()
 
 # 入力の更新.
 func _update_input() -> void:
@@ -60,9 +60,9 @@ func _draw() -> void:
 	for j in range(FieldMgr.HEIGHT):
 		for i in range(FieldMgr.WIDTH):
 			var n = FieldMgr.getv(i, j)
-			var color = Color.white
+			var color = Color.WHITE
 			if n == Array2.EMPTY:
-				color = Color.gray
+				color = Color.GRAY
 			_draw_tile(n, i, j, 640, 380, color)
 	
 	# タイル情報の描画.
@@ -77,7 +77,7 @@ func _draw() -> void:
 # タイルのデバッグ描画.
 func _draw_tile(n:int, x:int, y:int, x_ofs:float, y_ofs:float, color:Color) -> void:
 	var buf = "%d"%n
-	draw_string(_font, Vector2(x_ofs + 32 + 20 * x, y_ofs + 32 + 20 * y), buf, color)	
+	draw_string(_font, Vector2(x_ofs + 32 + 20 * x, y_ofs + 32 + 20 * y), buf, 0, -1, 16, color)	
 
 # カーソルのデバッグ描画.
 func _draw_cursor(x:int, y:int, color:Color, x_ofs:float, y_ofs:float) -> void:

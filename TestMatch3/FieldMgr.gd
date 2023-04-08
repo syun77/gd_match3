@@ -39,9 +39,9 @@ enum eDrag {
 
 # 消去種別 (消去判定で使用する).
 enum eEraseType {
-	EMPTY  = 0 # 空.
-	NOT    = 1 # 検索済み(消さない).
-	REMOVE = 2 # 消去対象.
+	EMPTY  = 0, # 空.
+	NOT    = 1, # 検索済み(消さない).
+	REMOVE = 2, # 消去対象.
 }
 
 # ----------------------------------------
@@ -55,8 +55,8 @@ var _dragpos = Point2.new() # ドラッグ開始位置.
 # ----------------------------------------
 # onready.
 # ----------------------------------------
-onready var _layer = $Layer # タイル管理用キャンバスレイヤー.
-onready var _spr_cursor = $LayerUI/Cursor # カーソルスプライト.
+@onready var _layer = $Layer # タイル管理用キャンバスレイヤー.
+@onready var _spr_cursor = $LayerUI/Cursor # カーソルスプライト.
 
 # ----------------------------------------
 # メンバ関数.
@@ -292,7 +292,7 @@ func get_all_tiles():
 
 # タイルの生成.
 func _create_tile(id:int, x:int, y:int) -> void:
-	var tile = TileObj.instance()
+	var tile = TileObj.instantiate()
 	# CanvasLayerに登録する.
 	_layer.add_child(tile)
 	# 出現開始.
@@ -331,8 +331,8 @@ func fall() -> void:
 
 # 消去チェックする.
 # @return 消去するインデックスのリスト.
-func check_erase() -> PoolIntArray:
-	var erase_list = PoolIntArray()
+func check_erase() -> PackedInt32Array:
+	var erase_list = PackedInt32Array()
 	
 	# 消去判定用の2次元配列.
 	var tmp = Array2.new(WIDTH, HEIGHT)
@@ -367,7 +367,7 @@ func check_erase() -> PoolIntArray:
 					erase_list.append_array(list)
 	
 	# 重複インデックスを削除
-	var list = PoolIntArray()
+	var list = PackedInt32Array()
 	for idx in erase_list:
 		if list.has(idx) == false:
 			list.append(idx) # 未登録のもののみ追加.

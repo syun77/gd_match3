@@ -19,7 +19,7 @@ const INVALID = -1 # 無効とする値.
 var width:int = 0
 var height:int = 0
 
-var _array:PoolIntArray = []
+var _array:PackedInt32Array = []
 
 # ----------------------------------------
 # メンバ関数.
@@ -136,8 +136,8 @@ func fall() -> void:
 					break
 
 # 指定の値に一致する座標(インデックス)のリストを取得する.
-func search(v:int) -> PoolIntArray:
-	var ret := PoolIntArray()
+func search(v:int) -> PackedInt32Array:
+	var ret := PackedInt32Array()
 	for idx in range(width * height):
 		if get_idx(idx) == v:
 			ret.append(idx)

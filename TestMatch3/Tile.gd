@@ -59,14 +59,14 @@ var _velocity_y:float = 0
 # ----------------------------------------
 # onready.
 # ----------------------------------------
-onready var _spr = $Sprite
-onready var _label = $Label
+@onready var _spr = $Sprite2D
+@onready var _label = $Label
 
 # ----------------------------------------
 # メンバ関数.
 # ----------------------------------------
 # タイルIDを設定.
-func set_id(var id):
+func set_id(id):
 	_id = id
 	
 	# IDに対応する画像を設定する
@@ -143,7 +143,7 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	
 	# 衝突チェックするタイルの情報を取り出す.	
 	var obj_id = tile.get_instance_id() # インスタンス番号
-	#var number = tile.get_id() # タイル番号 (デバッグ用)
+	var number = tile.get_id() # タイル番号 (デバッグ用)
 	var tile_x = tile.get_grid_x() # グリッド座標(X)
 	var tile_y = tile.get_grid_y() # グリッド座標(Y)
 	
@@ -165,12 +165,14 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	# 更新タイミングの関係でめり込んでいたら押し返す.
 	_grid_y -= (bottom - upper)
 	
+	#print("push up:%d bottom:%d"%[number, get_id()])
+	
 	return true
 
 # グリッドにフィットするように調整する.
 func fit_grid() -> void:
-	_grid_x = int(_grid_x)
-	_grid_y = int(_grid_y)
+	_grid_x = round(_grid_x)
+	_grid_y = round(_grid_y)
 
 # 非表示状態かどうか.
 func is_hide() -> bool:
