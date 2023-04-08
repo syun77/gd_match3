@@ -16,8 +16,8 @@ const TileObj = preload("res://Tile.tscn")
 # ----------------------------------------
 const WIDTH  = 8 # フィールドの幅.
 const HEIGHT = 8 # フィールドの高さ.
-const OFS_X = 64 # フィールドの描画オフセット(X).
-const OFS_Y = 64 # フィールドの描画オフセット(Y).
+const OFS_X = 540 # フィールドの描画オフセット(X).
+const OFS_Y = 128 # フィールドの描画オフセット(Y).
 
 const ERASE_CNT = 3 # 3つ並んだら消去する.
 const TILE_TYPE = 4 # 4種類出現する

@@ -63,7 +63,7 @@ func _draw() -> void:
 			var color = Color.WHITE
 			if n == Array2.EMPTY:
 				color = Color.GRAY
-			_draw_tile(n, i, j, 640, 380, color)
+			_draw_tile(n, i, j, 64, 380, color)
 	
 	# タイル情報の描画.
 	#var idx = 0
