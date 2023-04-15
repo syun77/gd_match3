@@ -1,0 +1,7 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+[ext_resource type="FontFile" uid="uid://dhv1xmmixs67j" path="res://assets/fonts/mplus-1c-regular.ttf" id="1_4yyiq"]
+
+[resource]
+default_font = ExtResource("1_4yyiq")
+default_font_size = 24

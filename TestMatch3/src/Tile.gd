@@ -12,15 +12,15 @@ class_name TileObj
 # ----------------------------------------
 # 外部参照.
 # ----------------------------------------
-const Array2 = preload("res://Array2.gd")
+const Array2 = preload("res://src/common/Array2.gd")
 
 # ----------------------------------------
 # 定数.
 # ----------------------------------------
-# 重力加速度.
+## 重力加速度.
 const GRAVITY_Y = 0.5
 
-# タイマー.
+## タイマー.
 const TIMER_VANISH = 0.5 # 消滅時間.
 const TIMER_SWAP = 0.1 # 交換.
 
@@ -28,6 +28,7 @@ enum eTile {
 	NONE = 0 # 無効なタイルID
 }
 
+## タイルの状態
 enum eState {
 	HIDE, # 非表示.
 	FALLING, # 落下中.
@@ -39,21 +40,21 @@ enum eState {
 # ----------------------------------------
 # メンバ変数.
 # ----------------------------------------
-# タイルID
+## タイルID
 var _id:int = 0
 
-# 状態.
+## 状態.
 var _timer:float = 0
 var _state = eState.HIDE
 
-# 現在のグリッド座標.
+## 現在のグリッド座標.
 var _grid_x:float = 0
 var _grid_y:float = 0
-# 交換先のグリッド座標.
+## 交換先のグリッド座標.
 var _swap_x:float = 0
 var _swap_y:float = 0
 
-# 落下速度.
+## 落下速度.
 var _velocity_y:float = 0
 
 # ----------------------------------------
@@ -63,9 +64,9 @@ var _velocity_y:float = 0
 @onready var _label = $Label
 
 # ----------------------------------------
-# メンバ関数.
+# public functions.
 # ----------------------------------------
-# タイルIDを設定.
+## タイルIDを設定.
 func set_id(id):
 	_id = id
 	
@@ -84,22 +85,22 @@ func set_id(id):
 	
 	_spr.texture = load("res://assets/tiles/%s"%tbl[_id])
 
-# タイルIDを取得する.
+## タイルIDを取得する.
 func get_id() -> int:
 	return _id
 
-# 現在の座標(グリッド座標)を取得する.
+## 現在の座標(グリッド座標)を取得する.
 func get_grid_x() -> float:
 	return _grid_x
 func get_grid_y() -> float:
 	return _grid_y
 
-# 開始処理.
+## 開始処理.
 func _ready() -> void:
 	set_id(eTile.NONE)
 	visible = false
 
-# 出現開始.
+## 出現開始.
 func appear(id:int, px:float, py:float) -> void:
 	# IDを設定.
 	set_id(id)
@@ -113,7 +114,7 @@ func appear(id:int, px:float, py:float) -> void:
 	# グリッド座標系をワールド座標系に変換.
 	position = FieldMgr.to_world(_grid_x, _grid_y)
 
-# 入れ替え開始.
+## 入れ替え開始.
 func start_swap(next_x:float, next_y:float) -> void:
 	if _state != eState.STANDBY:
 		printerr("eState.STANDBY(%d) 以外では呼び出せません state:%d"%[eState.STANDBY, _state])
@@ -125,20 +126,20 @@ func start_swap(next_x:float, next_y:float) -> void:
 	_state = eState.SWAP
 	_timer = TIMER_SWAP
 
-# 入れ替え終了.
+## 入れ替え終了.
 func end_swap() -> void:
 	_grid_x = _swap_x
 	_grid_y = _swap_y
 	_state = eState.STANDBY
 
-# 落下チェック.
+## 落下チェック.
 func _check_fall() -> bool:
 	if FieldMgr.check_hit_bottom(self):
 		return false
 	return true
 
-# 下のタイルと衝突しているかどうか
-# @param tile 判定する下のタイル 
+## 下のタイルと衝突しているかどうか
+## @param tile 判定する下のタイル 
 func check_hit_bottom(tile:TileObj) -> bool:
 	
 	# 衝突チェックするタイルの情報を取り出す.	
@@ -169,26 +170,38 @@ func check_hit_bottom(tile:TileObj) -> bool:
 	
 	return true
 
-# グリッドにフィットするように調整する.
+## グリッドにフィットするように調整する.
 func fit_grid() -> void:
 	_grid_x = round(_grid_x)
 	_grid_y = round(_grid_y)
 
-# 非表示状態かどうか.
+## 非表示状態かどうか.
 func is_hide() -> bool:
 	return _state == eState.HIDE
 
-# 消去や移動判定可能な状態かどうか.
+## 消去や移動判定可能な状態かどうか.
 func is_standby() -> bool:
 	return _state == eState.STANDBY
 
-# 指定の位置にタイルが存在するかどうか.
+## 落下中かどうか.
+func is_falling() -> bool:
+	return _state == eState.FALLING
+	
+## 移動中かどうか.
+func is_moving() -> bool:
+	match _state:
+		eState.FALLING, eState.VANISH:
+			return true
+		_:
+			return false
+
+## 指定の位置にタイルが存在するかどうか.
 func is_same_pos(i:int, j:int) -> bool:
 	if i == int(_grid_x) and j == int(_grid_y):
 		return true	
 	return false
 
-# 消滅処理開始.
+## 消滅処理開始.
 func start_vanish() -> void:
 	_state = eState.VANISH
 	_timer = TIMER_VANISH
@@ -203,7 +216,7 @@ func _to_world() -> Vector2:
 	
 	return FieldMgr.to_world(_grid_x, _grid_y)
 
-# 手動更新関数.
+## 手動更新関数.
 func proc(delta: float) -> void:
 	if _id == eTile.NONE:
 		visible = false

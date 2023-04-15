@@ -7,9 +7,9 @@ extends Node2D
 # ----------------------------------------
 # 外部参照.
 # ----------------------------------------
-const Point2 = preload("res://Point2.gd")
-const Array2 = preload("res://Array2.gd")
-const TileObj = preload("res://Tile.tscn")
+const Point2 = preload("res://src/common/Point2.gd")
+const Array2 = preload("res://src/common/Array2.gd")
+const TileObj = preload("res://src/Tile.tscn")
 
 # ----------------------------------------
 # 定数.
@@ -51,6 +51,8 @@ var _state   = eState.HIDE # 状態.
 var _field   = Array2.new(WIDTH, HEIGHT) # フィールド情報.
 var _select  = Point2.new() # 選択カーソル.
 var _dragpos = Point2.new() # ドラッグ開始位置.
+var _cnt_chain = 0 # 連鎖数.
+var _max_chain = 0 # 最大連鎖数.
 
 # ----------------------------------------
 # onready.
@@ -59,11 +61,8 @@ var _dragpos = Point2.new() # ドラッグ開始位置.
 @onready var _spr_cursor = $LayerUI/Cursor # カーソルスプライト.
 
 # ----------------------------------------
-# メンバ関数.
+# public functions.
 # ----------------------------------------
-# コンストラクタ
-func _init() -> void:
-	initialize()
 	
 # 初期化.
 func initialize() -> void:
@@ -81,6 +80,10 @@ func initialize() -> void:
 	
 	# 初期状態は非表示.
 	_state = eState.HIDE
+	
+	# 連鎖数を初期化.
+	_cnt_chain = 0
+	_max_chain = 0
 
 # 表示開始.
 func start() -> void:
@@ -92,10 +95,14 @@ func proc(delta: float) -> void:
 		return # 動作しない.
 	
 	# タイルの更新.
+	var is_moving = false
 	for tile in _layer.get_children():
 		tile.proc(delta)
+		if tile.is_moving():
+			is_moving = true # 移動中のタイルが存在する.
 		
 	# 新しいタイル出現チェック
+	var cnt_new_tile = 0
 	for i in range(_field.width):
 		# 1列あたりに HEIGHT のタイルで埋まるようにする.
 		var list = _search_x_tiles(i)
@@ -103,7 +110,7 @@ func proc(delta: float) -> void:
 		if d <= 0:
 			continue
 		
-		var min_y := -1.0 # 最大の高さ (座標系としては最小値) 
+		var min_y := -1.0 # 最大の高さ (グリッド標系としては最小値) 
 		for tile in list:
 			var py = tile.get_grid_y()
 			min_y = min(py, min_y)
@@ -112,16 +119,60 @@ func proc(delta: float) -> void:
 			var n = randi()%TILE_TYPE + 1
 			_create_tile(n, i, int(min_y))
 			min_y -= 1.0
-	
+		cnt_new_tile += d
+			
 	# 消去判定を行う.
-	_update_erase()
+	var cnt_erase = _update_erase()
+	if cnt_erase > 0:
+		# 消去SE再生.
+		var level = min(_cnt_chain, 7) # 7を最大とする.
+		var pitch = 1.0 - 6 * (1.0/12.0) + ((1.0/12.0)*(level - 1))
+		Common.play_sound(pitch)
+	
+	if _check_chain(is_moving, cnt_new_tile, cnt_erase):
+		# コンボ継続.
+		pass
+	elif _cnt_chain > 0:
+		# コンボ終了.
+		_cnt_chain = 0
 	
 	# カーソルの更新.
 	_update_cursor()
 
+## コンボチェック.
+func _check_chain(is_moving:bool, cnt_new_tile:int, cnt_erase:int) -> bool:
+	if is_moving:
+		# 移動中のタイルが存在する
+		return true # 継続.
+	if cnt_new_tile > 0:
+		# 新しいタイルが存在する
+		return true # 継続.
+	if cnt_erase > 0:
+		# 消去タイルが存在する.
+		return true # 継続.
+	
+	return false # コンボ終了.
 
-# 更新 > 消去処理
-func _update_erase() -> void:
+## 連鎖中かどうか.
+func is_chain() -> bool:
+	return _cnt_chain > 0
+## 連鎖数を取得する.
+func get_chain() -> int:
+	return _cnt_chain
+## 最連鎖数を取得する.
+func get_max_chain() -> int:
+	return _max_chain
+
+# ----------------------------------------
+# private functions.
+# ----------------------------------------
+# コンストラクタ
+func _init() -> void:
+	initialize()
+	
+## 更新 > 消去処理
+## @return 消去タイルの数.
+func _update_erase() -> int:
 	# いったん初期化.
 	_field.fill(Array2.EMPTY)
 	
@@ -137,6 +188,12 @@ func _update_erase() -> void:
 	# 消去リストを取得する.
 	var erase_list = check_erase()
 	
+	if erase_list.size() > 0:
+		# 1つでも消せればコンボ加算.
+		_cnt_chain += 1
+		if _cnt_chain > _max_chain:
+			_max_chain = _cnt_chain
+	
 	# 消去実行.
 	for idx in erase_list:
 		var p = _field.idx_to_pos(idx)
@@ -147,6 +204,8 @@ func _update_erase() -> void:
 		# 消滅開始.		
 		var tile = search_tile(p)
 		tile.start_vanish()	
+	
+	return erase_list.size()
 
 # 更新 > カーソル.
 func _update_cursor() -> void:

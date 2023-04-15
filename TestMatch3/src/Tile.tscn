@@ -1,17 +1,17 @@
-[gd_scene load_steps=5 format=3 uid="uid://c3appfxb2s257"]
+[gd_scene load_steps=5 format=3 uid="uid://br38jkd1t1rud"]
 
-[ext_resource type="Script" path="res://Tile.gd" id="1"]
-[ext_resource type="Theme" uid="uid://bpnv5sq4jsfaa" path="res://font_theme.tres" id="2"]
-[ext_resource type="Texture2D" uid="uid://oynv0bjf1l7o" path="res://assets/tiles/tile_red.png" id="3"]
+[ext_resource type="Script" path="res://src/Tile.gd" id="1_w6t6l"]
+[ext_resource type="Texture2D" uid="uid://oynv0bjf1l7o" path="res://assets/tiles/tile_red.png" id="2_hx5ms"]
+[ext_resource type="Theme" path="res://assets/fonts/font_theme.tres" id="3_1n7c5"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(32, 32)
 
 [node name="Tile" type="Area2D"]
-script = ExtResource("1")
+script = ExtResource("1_w6t6l")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("3")
+texture = ExtResource("2_hx5ms")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
@@ -22,7 +22,7 @@ offset_left = -29.0
 offset_top = -23.0
 offset_right = 28.0
 offset_bottom = 23.0
-theme = ExtResource("2")
+theme = ExtResource("3_1n7c5")
 text = "Tile"
 horizontal_alignment = 1
 vertical_alignment = 1
